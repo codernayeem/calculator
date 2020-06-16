@@ -22,6 +22,7 @@ class Button(QToolButton):
 
 
 class Calculator(QWidget):
+    all_key_that_can_entered = '1234567890-+*/.()'
 
     def __init__(self, parent=None):
         super(Calculator, self).__init__(parent)
@@ -32,6 +33,27 @@ class Calculator(QWidget):
         global font
         font = self.font()
         font.setPointSize(font.pointSize() + 12)
+
+        QShortcut(QKeySequence('Return'), self).activated.connect(lambda: self.if_clicked('='))
+        QShortcut(QKeySequence('='), self).activated.connect(lambda: self.if_clicked('='))
+        QShortcut(QKeySequence('1'), self).activated.connect(lambda: self.if_clicked('1'))
+        QShortcut(QKeySequence('2'), self).activated.connect(lambda: self.if_clicked('2'))
+        QShortcut(QKeySequence('3'), self).activated.connect(lambda: self.if_clicked('3'))
+        QShortcut(QKeySequence('4'), self).activated.connect(lambda: self.if_clicked('4'))
+        QShortcut(QKeySequence('5'), self).activated.connect(lambda: self.if_clicked('5'))
+        QShortcut(QKeySequence('6'), self).activated.connect(lambda: self.if_clicked('6'))
+        QShortcut(QKeySequence('7'), self).activated.connect(lambda: self.if_clicked('7'))
+        QShortcut(QKeySequence('8'), self).activated.connect(lambda: self.if_clicked('8'))
+        QShortcut(QKeySequence('9'), self).activated.connect(lambda: self.if_clicked('9'))
+        QShortcut(QKeySequence('0'), self).activated.connect(lambda: self.if_clicked('0'))
+        QShortcut(QKeySequence('+'), self).activated.connect(lambda: self.if_clicked('+'))
+        QShortcut(QKeySequence('-'), self).activated.connect(lambda: self.if_clicked('-'))
+        QShortcut(QKeySequence('*'), self).activated.connect(lambda: self.if_clicked('*'))
+        QShortcut(QKeySequence('/'), self).activated.connect(lambda: self.if_clicked('/'))
+        QShortcut(QKeySequence('('), self).activated.connect(lambda: self.if_clicked('('))
+        QShortcut(QKeySequence(')'), self).activated.connect(lambda: self.if_clicked(')'))
+        QShortcut(QKeySequence('Backspace'), self).activated.connect(lambda: self.if_clicked('Back'))
+        QShortcut(QKeySequence('c'), self).activated.connect(lambda: self.if_clicked('C'))
 
         self.expression_entry = QLineEdit('')
         self.expression_entry.setFont(font)
@@ -86,11 +108,33 @@ class Calculator(QWidget):
 
     def create_button(self, text, command=None, font=None):
         button = Button(text)
+        if command is not None:
+            button.clicked.connect(command)
+        else:
+            button.clicked.connect(lambda: self.if_clicked(text))
         if font is not None:
             button.setFont(font)
         else:
             button.setFont(globals()['font'])
         return button
+
+    def if_clicked(self, bt=None):
+        old = str(self.expression_entry.text())
+        if bt:
+            if bt == "C":
+                self.expression_entry.clear()
+            elif bt == "Back":
+                self.expression_entry.setText(old[:len(old)-1])
+            if bt == "=":
+                if old != '':
+                    self.show_result(old)
+            else:
+                if bt not in ['C', '=']:
+                    for a_char in old:
+                        if a_char not in Calculator.all_key_that_can_entered:
+                            self.expression_entry.clear()
+                if bt not in ['C', 'Back']:
+                    self.expression_entry.setText(self.expression_entry.text() + str(bt))
 
     def show_result(self, exp):
         pass
