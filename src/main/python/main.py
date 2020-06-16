@@ -137,7 +137,17 @@ class Calculator(QWidget):
                     self.expression_entry.setText(self.expression_entry.text() + str(bt))
 
     def show_result(self, exp):
-        pass
+        ex = str(exp)
+        if ex == '()':
+            ans = "Error"
+        elif ex == "Error":
+            ans = ''
+        else:
+            try:
+                ans = eval(ex)
+            except:
+                ans = "Error"
+        self.expression_entry.setText(str(ans))
 
 
 if __name__ == '__main__':
