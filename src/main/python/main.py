@@ -23,7 +23,8 @@ class Button(QToolButton):
 
 class Calculator(QWidget):
     all_key_that_can_entered = '1234567890-+*/.()'
-
+    errors = ['ZeroDivisionError', 'SyntaxError', 'Error']
+    
     def __init__(self, parent=None):
         super(Calculator, self).__init__(parent)
         self.setWindowTitle("Calculator")
@@ -139,14 +140,18 @@ class Calculator(QWidget):
     def show_result(self, exp):
         ex = str(exp)
         if ex == '()':
-            ans = "Error"
-        elif ex == "Error":
+            ans = Calculator.errors[1]
+        elif ex in Calculator.errors:
             ans = ''
         else:
             try:
                 ans = eval(ex)
+            except ZeroDivisionError:
+                ans = Calculator.errors[0]
+            except SyntaxError:
+                ans = Calculator.errors[1]
             except:
-                ans = "Error"
+                ans = Calculator.errors[2]
         self.expression_entry.setText(str(ans))
 
 
