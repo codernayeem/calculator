@@ -1,2 +1,3 @@
-# calculator
-An basic calculator with some advance function
+# Calculator
+
+A simple basic calculator made by PyQt5 for windows/mac/linux
