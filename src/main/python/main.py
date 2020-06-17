@@ -13,6 +13,7 @@ class Calculator(QMainWindow):
     operators = ['+', '-', '*', '/']
     last_invalid_exp = None
     memory = 0.0
+    in_full_screen = False
     about_page = None
 
     def __init__(self, parent=None):

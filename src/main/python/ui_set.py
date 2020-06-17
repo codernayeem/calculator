@@ -418,11 +418,27 @@ def set_ui(main, backspace_image_link, app_icon):
     set_on_click_event(main)
 
 
+def full_screen_toggle(self):
+    if self.in_full_screen:
+        self.exp_label.setGeometry(QRect(0, 20, 321, 81))
+        self.num_operator_grid.setVisible(True)
+        self.gridLayoutWidget_2.setVisible(True)
+        self.in_full_screen = False
+    else:
+        self.exp_label.setGeometry(QRect(0, 20, 321, 431))
+        self.num_operator_grid.setVisible(False)
+        self.gridLayoutWidget_2.setVisible(False)
+        self.in_full_screen = True
+
 def set_menu(self, app_icon):
     menu_bar = self.menuBar()
     menu_view = menu_bar.addMenu('Calculator')
     menu_about = menu_bar.addMenu('About')
     self.setMenuBar(menu_bar)
+
+    action_full = QAction('FullScreen Toggle', self)
+    action_full.setShortcut('Ctrl+F')
+    action_full.triggered.connect(lambda: full_screen_toggle(self))
 
     action_exit = QAction('Exit', self)
     action_exit.setShortcut('Ctrl+Q')
@@ -431,7 +447,8 @@ def set_menu(self, app_icon):
 
     action_author = QAction('About this app', self)
     action_author.triggered.connect(lambda: see_about(self, app_icon))
-
+    
+    menu_view.addAction(action_full)
     menu_view.addAction(action_exit)
     menu_about.addAction(action_author)
 
