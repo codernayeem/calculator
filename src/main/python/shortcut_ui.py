@@ -327,5 +327,5 @@ class UiShortcutPage(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1), _translate("shortcut_page", "Other"))
         self.ok_bt.setText(_translate("shortcut_page", "Ok"))
         self.app_name.setText(_translate("shortcut_page", "Calculator"))
-        self.version.setText(_translate("shortcut_page", "v1.2.2"))
+        self.version.setText(_translate("shortcut_page", "v1.2.3"))
 

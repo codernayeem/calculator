@@ -97,7 +97,7 @@ class UiAboutPage(object):
         self.author.setText("Md. Nayeeem")
         self.email.setText("nayemmia898@gmail.com")
         self.name.setText("Calculator")
-        self.version.setText("v1.2.2")
+        self.version.setText("v1.2.3")
         self.thanks_label.setText("Thanks for using this software")
         self.ok_bt.setText("Ok")
 
