@@ -1,6 +1,7 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtWidgets import QApplication, QStyleFactory, QMainWindow
 from PyQt5.QtGui import QTextCursor
+import pyperclip
 import sys
 from ui_set import set_ui, set_key_sequence
 
@@ -22,6 +23,42 @@ class Calculator(QMainWindow):
         QApplication.setStyle(QStyleFactory.create('Fusion'))
         set_ui(self, globals()['appctxt'].get_resource('backspace.png'), globals()['appctxt'].get_resource('icon.png'))
         set_key_sequence(self)
+
+    def copy(self):
+        exp = self.get_exp()
+        cursor = self.exp_label.textCursor()
+        if cursor.selectionStart() != cursor.selectionEnd():
+            exp = exp[cursor.selectionStart():cursor.selectionEnd()]
+        pyperclip.copy(exp)
+
+    def paste(self):
+        exp = self.get_exp()
+        paste = pyperclip.paste()
+        got_error = False
+        if paste != '':
+            for a_char in paste:
+                if a_char not in '0123456789.+-*/()':
+                    got_error = True
+            if got_error:
+                if exp in Calculator.errors:
+                    self.last_invalid_exp = 0.0
+                else:
+                    self.last_invalid_exp = exp
+                self.set_exp(Calculator.errors[5])
+            else:
+                cursor = self.exp_label.textCursor()
+                if cursor.selectionStart() != cursor.selectionEnd():
+                    if exp not in Calculator.errors:
+                        res = exp[:cursor.selectionStart()] + paste + exp[cursor.selectionEnd():]
+                        self.set_exp(res, cursor.selectionStart()+len(paste))
+                else:
+                    if exp in Calculator.errors or exp == '0':
+                        if cursor.position() == 0:
+                            self.set_exp(exp + paste, len(paste))
+                        else:
+                            self.set_exp(paste)
+                    else:
+                        self.set_exp(exp[:cursor.position()] + paste + exp[cursor.position():], cursor.position()+len(paste))
 
     def if_clicked(self, bt):
         if bt in '1234567890.()+-*/':

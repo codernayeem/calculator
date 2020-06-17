@@ -434,6 +434,7 @@ def full_screen_toggle(self):
 def set_menu(self, app_icon):
     menu_bar = self.menuBar()
     menu_view = menu_bar.addMenu('Calculator')
+    menu_tool = menu_bar.addMenu('Tool')
     menu_about = menu_bar.addMenu('About')
     self.setMenuBar(menu_bar)
 
@@ -450,6 +451,14 @@ def set_menu(self, app_icon):
     action_exit.setStatusTip('Exit Calculator')
     action_exit.triggered.connect(lambda: exit(0))
 
+    action_copy = QAction('Copy', self)
+    action_copy.setShortcut('Ctrl+C')
+    action_copy.triggered.connect(self.copy)
+
+    action_paste = QAction('Paste', self)
+    action_paste.setShortcut('Ctrl+V')
+    action_paste.triggered.connect(self.paste)
+
     action_author = QAction('About this app', self)
     action_author.triggered.connect(lambda: see_about(self, app_icon))
 
@@ -457,6 +466,8 @@ def set_menu(self, app_icon):
     menu_view.addAction(action_sh)
     menu_view.addSeparator()
     menu_view.addAction(action_exit)
+    menu_tool.addAction(action_copy)
+    menu_tool.addAction(action_paste)
     menu_about.addAction(action_author)
 
 def set_text_on_ui(main, backspace_image_link):
