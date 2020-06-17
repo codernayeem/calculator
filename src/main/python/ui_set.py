@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtGui import QKeySequence, QIcon, QPixmap, QFont
 
 from author import UiAboutPage
+from shortcut_ui import UiShortcutPage
 
 def set_ui(main, backspace_image_link, app_icon):
     set_menu(main, app_icon)
@@ -440,6 +441,10 @@ def set_menu(self, app_icon):
     action_full.setShortcut('Ctrl+F')
     action_full.triggered.connect(lambda: full_screen_toggle(self))
 
+    action_sh = QAction('Shortcuts', self)
+    action_sh.setShortcut('Ctrl+S')
+    action_sh.triggered.connect(lambda: show_shortcuts(self))
+
     action_exit = QAction('Exit', self)
     action_exit.setShortcut('Ctrl+Q')
     action_exit.setStatusTip('Exit Calculator')
@@ -449,6 +454,7 @@ def set_menu(self, app_icon):
     action_author.triggered.connect(lambda: see_about(self, app_icon))
     
     menu_view.addAction(action_full)
+    menu_view.addAction(action_sh)
     menu_view.addAction(action_exit)
     menu_about.addAction(action_author)
 
@@ -569,6 +575,21 @@ def set_key_sequence(self):
     QShortcut(QKeySequence('alt+7'), self).activated.connect(lambda: self.on_root_click(7))
     QShortcut(QKeySequence('alt+8'), self).activated.connect(lambda: self.on_root_click(8))
     QShortcut(QKeySequence('alt+9'), self).activated.connect(lambda: self.on_root_click(9))
+
+
+
+def show_shortcuts(self):
+    if self.shortcut_page is None:
+        self.shortcut_page = QWidget()
+        self.shortcut_page.setWindowTitle('Shortcuts')
+        self.shortcut_page.setFixedWidth(340)
+        self.shortcut_page.setFixedHeight(444)
+        self.shortcut_page.setWindowModality(Qt.ApplicationModal)
+        ui = UiShortcutPage()
+        ui.setup_ui(self.shortcut_page)
+        QShortcut(QKeySequence('Esc'), self.shortcut_page).activated.connect(lambda: self.shortcut_page.close())
+    self.shortcut_page.destroy()
+    self.shortcut_page.show()
 
 
 def see_about(self, icon):

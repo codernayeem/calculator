@@ -15,6 +15,7 @@ class Calculator(QMainWindow):
     memory = 0.0
     in_full_screen = False
     about_page = None
+    shortcut_page = None
 
     def __init__(self, parent=None):
         super(Calculator, self).__init__(parent)
