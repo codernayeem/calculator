@@ -1,3 +1,3 @@
 # Calculator
 
-A simple basic calculator made by PyQt5 for windows/mac/linux
+A calculator made by PyQt5 for Windows/Mac/Linux.
