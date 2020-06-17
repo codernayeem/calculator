@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QShortcut, QAction, QPushButton, QSizePolicy, QWidge
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtGui import QKeySequence, QIcon, QPixmap, QFont
 
+from author import UiAboutPage
 
 def set_ui(main, backspace_image_link, app_icon):
     set_menu(main, app_icon)
@@ -420,6 +421,7 @@ def set_ui(main, backspace_image_link, app_icon):
 def set_menu(self, app_icon):
     menu_bar = self.menuBar()
     menu_view = menu_bar.addMenu('Calculator')
+    menu_about = menu_bar.addMenu('About')
     self.setMenuBar(menu_bar)
 
     action_exit = QAction('Exit', self)
@@ -427,7 +429,11 @@ def set_menu(self, app_icon):
     action_exit.setStatusTip('Exit Calculator')
     action_exit.triggered.connect(lambda: exit(0))
 
+    action_author = QAction('About this app', self)
+    action_author.triggered.connect(lambda: see_about(self, app_icon))
+
     menu_view.addAction(action_exit)
+    menu_about.addAction(action_author)
 
 def set_text_on_ui(main, backspace_image_link):
     main.exp_label.setPlainText("0")
@@ -547,3 +553,17 @@ def set_key_sequence(self):
     QShortcut(QKeySequence('alt+8'), self).activated.connect(lambda: self.on_root_click(8))
     QShortcut(QKeySequence('alt+9'), self).activated.connect(lambda: self.on_root_click(9))
 
+
+def see_about(self, icon):
+    if self.about_page is None:
+        self.about_page = QWidget()
+        self.about_page.setWindowTitle('About')
+        self.about_page.setFixedWidth(350)
+        self.about_page.setFixedHeight(221)
+        self.about_page.setWindowModality(Qt.ApplicationModal)
+        ui = UiAboutPage()
+        ui.setup_ui(self.about_page)
+        ui.icon.setPixmap(QPixmap(icon))
+        QShortcut(QKeySequence('Esc'), self.about_page).activated.connect(lambda: self.about_page.close())
+    self.about_page.destroy()
+    self.about_page.show()
