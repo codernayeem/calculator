@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QShortcut, QAction, QPushButton, QSizePolicy, QWidget, QLayout, QGridLayout, QPlainTextEdit
+from PyQt5.QtWidgets import QShortcut, QAction, QPushButton, QSizePolicy, QWidget, QLayout, QGridLayout, QTextEdit
 from PyQt5.QtCore import Qt, QRect, QSize
-from PyQt5.QtGui import QKeySequence, QIcon, QPixmap, QFont
-
+from PyQt5.QtGui import QKeySequence, QIcon, QPixmap, QFont, QTextCursor
 from author import UiAboutPage
 from shortcut_ui import UiShortcutPage
 
@@ -10,8 +9,8 @@ def set_ui(main, backspace_image_link, app_icon):
     main.setFixedWidth(321)
     main.setFixedHeight(451)
 
-    main.exp_label = QPlainTextEdit(main)
-    main.exp_label.setReadOnly(True)
+    main.exp_label = QTextEdit(main)
+    main.exp_label.setTextInteractionFlags(Qt.TextSelectableByKeyboard | Qt.TextSelectableByMouse)
     main.exp_label.setGeometry(QRect(0, 20, 321, 81))
     sizePolicy = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
     sizePolicy.setHorizontalStretch(1)
@@ -431,6 +430,7 @@ def full_screen_toggle(self):
         self.gridLayoutWidget_2.setVisible(False)
         self.in_full_screen = True
 
+
 def set_menu(self, app_icon):
     menu_bar = self.menuBar()
     menu_view = menu_bar.addMenu('Calculator')
@@ -452,14 +452,16 @@ def set_menu(self, app_icon):
 
     action_author = QAction('About this app', self)
     action_author.triggered.connect(lambda: see_about(self, app_icon))
-    
+
     menu_view.addAction(action_full)
     menu_view.addAction(action_sh)
+    menu_view.addSeparator()
     menu_view.addAction(action_exit)
     menu_about.addAction(action_author)
 
 def set_text_on_ui(main, backspace_image_link):
-    main.exp_label.setPlainText("0")
+    main.exp_label.setText("0")
+    main.exp_label.moveCursor(QTextCursor.End)
     main.bt_ac.setText("AC")
     main.bt_c.setText("C")
     main.bt_ce.setText("CE")
@@ -531,6 +533,10 @@ def set_on_click_event(self):
 
 
 def set_key_sequence(self):
+    QShortcut(QKeySequence('up'), self).activated.connect(lambda: self.exp_label.moveCursor(QTextCursor.Up))
+    QShortcut(QKeySequence('down'), self).activated.connect(lambda: self.exp_label.moveCursor(QTextCursor.Down))
+    QShortcut(QKeySequence('left'), self).activated.connect(lambda: self.exp_label.moveCursor(QTextCursor.Left))
+    QShortcut(QKeySequence('right'), self).activated.connect(lambda: self.exp_label.moveCursor(QTextCursor.Right))
     QShortcut(QKeySequence('m'), self).activated.connect(lambda: self.on_all_m_click(0))
     QShortcut(QKeySequence('Shift+m'), self).activated.connect(lambda: self.on_all_m_click(1))
     QShortcut(QKeySequence('Ctrl+m'), self).activated.connect(lambda: self.on_all_m_click(3))
@@ -576,7 +582,7 @@ def set_key_sequence(self):
     QShortcut(QKeySequence('alt+8'), self).activated.connect(lambda: self.on_root_click(8))
     QShortcut(QKeySequence('alt+9'), self).activated.connect(lambda: self.on_root_click(9))
 
-
+ 
 
 def show_shortcuts(self):
     if self.shortcut_page is None:

@@ -26,26 +26,34 @@ class Calculator(QMainWindow):
     def if_clicked(self, bt):
         if bt in '1234567890.()+-*/':
             exp = self.get_exp()
+            cursor = self.exp_label.textCursor()
             if bt in Calculator.operators:
                 if exp not in Calculator.errors:
-                    self.set_exp(exp + str(bt))
+                    if cursor.selectionStart() == cursor.selectionEnd():
+                        self.set_exp(exp[:cursor.position()] + str(bt) + exp[cursor.position():], cursor.position()+len(bt))
+                    else:
+                        self.set_exp(exp[:cursor.selectionStart()] + str(bt) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt))
             elif exp not in Calculator.errors:
-                if exp == '0' and bt != '.':
-                    self.set_exp(str(bt))
+                if cursor.selectionStart() != cursor.selectionEnd():
+                    self.set_exp(exp[:cursor.selectionStart()] + str(bt) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt))
                 else:
-                    self.set_exp(exp + str(bt))
+                    if exp == '0' and bt != '.' and cursor.position() == 1:
+                        self.set_exp(str(bt))
+                    else:
+                        self.set_exp(exp[:cursor.position()] + str(bt) + exp[cursor.position():], cursor.position()+len(bt))
             else:
                 if bt == '.':
                     bt = '0.'
                 self.set_exp(str(bt))
 
     def on_plus_minus_click(self):
+        cursor = self.exp_label.textCursor()
         exp = self.get_exp()
         if exp not in Calculator.errors:
             if exp.startswith('-'):
-                self.set_exp(exp[1:])
+                self.set_exp(exp[1:], cursor.position()-1)
             else:
-                self.set_exp('-' + exp)
+                self.set_exp('-' + exp, cursor.position()+1)
 
     def on_square_or_cube(self, s):
         if str(s) in '23456789':
@@ -83,11 +91,22 @@ class Calculator(QMainWindow):
 
     def on_back_click(self):
         exp = self.get_exp()
+        cursor = self.exp_label.textCursor()
         if exp not in Calculator.errors and exp != '0':
-            if exp[:len(exp) - 1] != '':
-                self.set_exp(exp[:len(exp) - 1])
-            else:
-                self.set_exp('0')
+            if cursor.selectionStart() != cursor.selectionEnd():
+                r = exp[:cursor.selectionStart()] + exp[cursor.selectionEnd():]
+                if r == '':
+                    self.set_exp('0')
+                else:
+                    self.set_exp(r, cursor_pos=cursor.selectionStart())
+            elif cursor.position() != 0:
+                r = exp[:cursor.position()-1] + exp[cursor.position():]
+                if r != '':
+                    self.set_exp(r, cursor.position()-1)
+                else:
+                    self.set_exp('0')
+        elif cursor.selectionStart() != cursor.selectionEnd():
+            self.set_exp(exp)
 
     def on_ac_click(self):
         self.last_invalid_exp = None
@@ -107,10 +126,14 @@ class Calculator(QMainWindow):
                 r = str(self.memory)
                 if r.endswith('.0'):
                     r = r.replace('.0', '')
-                if exp == '0':
-                    self.set_exp(r)
+                cursor = self.exp_label.textCursor()
+                if cursor.selectionStart() != cursor.selectionEnd():
+                    self.set_exp(exp[:cursor.selectionStart()] + r + exp[cursor.selectionEnd():], cursor_pos=cursor.position())
                 else:
-                    self.set_exp(exp + r)
+                    if exp == '0':
+                        self.set_exp(r, cursor_pos=cursor.position()+len(r))
+                    else:
+                        self.set_exp(exp[:cursor.position()] + r + exp[cursor.position():], cursor_pos=cursor.position()+len(r))
             elif do in (1, 2):
                 res = self.get_result(exp)
                 if res:
@@ -158,10 +181,15 @@ class Calculator(QMainWindow):
                     return Calculator.errors[2]
         return None
 
-    def set_exp(self, text):
+    def set_exp(self, text, cursor_pos=None):
         text = str(text).replace('*', '\u00d7').replace('/', '\u00f7')
-        self.exp_label.setPlainText(text)
-        self.exp_label.moveCursor(QTextCursor.End)
+        self.exp_label.setText(text)
+        if cursor_pos is None:
+            self.exp_label.moveCursor(QTextCursor.End)
+        else:
+            self.exp_label.moveCursor(QTextCursor.Start)
+            for a in range(0, cursor_pos):
+                self.exp_label.moveCursor(QTextCursor.Right)
 
     def get_exp(self):
         return str(self.exp_label.toPlainText()).replace('\u00d7', '*').replace('\u00f7', '/').replace('\n', '')
