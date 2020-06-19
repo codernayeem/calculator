@@ -1,58 +1,140 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtWidgets import QApplication, QStyleFactory, QMainWindow
-from PyQt5.QtGui import QTextCursor
-import pyperclip
-import sys
-from ui_set import set_ui, set_key_sequence
+from PyQt5.QtGui import QTextCursor, QFontDatabase
+from main_ui import Ui_MainWindow
+from setup import setup
+from math import pi, e, degrees as deg, radians as rad
+import pyperclip, sys, math
 
+app = ApplicationContext()
 
-appctxt = ApplicationContext()
+ERRORS = ('ZeroDivisionError', 'SyntaxError', 'Error', 'MathError', 'NotANumberError', 'PasteError')
+ROOTS = ['\u221a', '\u221b']
+ADVANCED_KEYS = {'ŭ': 'asin(', 'Ů': 'acos(', 'ů': 'atan(', 'Ű': 'log(','Ū': 'sin(', 'ū': 'cos(', 'Ŭ': 'tan(', 'ű': 'In(', 'Ų': 'logx(', 'ų': 'deg(', 'Ŵ': 'rad(', 'ŵ': 'fact(', 'Ŷ': 'rootx('}
+EXTRA_SYMBOLS = {'pi': '\u03c0', 'asin': '\u016d', 'acos': '\u016e', 'atan': '\u016f', 'sin': '\u016a', 'cos': '\u016b', 'tan': '\u016c', 'log': '\u0170', 'ln': '\u0171', 'logx': '\u0172', 'deg': '\u0173','rad': '\u0174', '!': '\u0175', 'rootx': '\u0176'}
+POWERS = {'0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '.': '\u02d9', '*': '\u02df', '(': '\u207d', ')': '\u207e', '+': '\u207a', '-': '\u207b', '/': '\ua719'}
+POWER_VALUES = {'⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '\u02d9': '.', '\u02df': '*', '\u207d': '(', '\u207e': ')', '\u207a': '+', '\u207b': '-', '\ua719': '/'}
+POWER_LIST = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹', '\u02d9', '\u02df', '\u207d', '\u207e', '\u207a','\u207b', '\ua719']
 
+def fact(n):
+    return math.factorial(n)
+def log(n):
+    return math.log10(n)
+def logx(base, n):
+    return math.log(n, base)
+def ln(n):
+    return math.log(n, math.e)
+def root(exp, r=2):
+    return exp ** (1/r)
+def rootx(base, exp):
+    return root(exp, base)
+def cube_root(exp):
+    return root(exp, 3)
 
 class Calculator(QMainWindow):
-    errors = ['ZeroDivisionError', 'SyntaxError', 'Error', 'MathError', 'NotANumberError', 'PasteError']
-    operators = ['+', '-', '*', '/']
+    QFontDatabase.addApplicationFont(app.get_resource('font'))
+    ui = Ui_MainWindow()
+    version, main_ic = app.build_settings['version'], app.get_resource('icon.png')
+
+    history = []
+    history_cursor = None
     last_invalid_exp = None
     memory = 0.0
-    in_full_screen = False
-    about_page = None
-    shortcut_page = None
-
+    make_power_enabled = False
+ 
     def __init__(self, parent=None):
         super(Calculator, self).__init__(parent)
         QApplication.setStyle(QStyleFactory.create('Fusion'))
-        set_ui(self, globals()['appctxt'].get_resource('backspace.png'), globals()['appctxt'].get_resource('icon.png'))
-        set_key_sequence(self)
+        self.ui.setupUi(self)
+        self.setWindowTitle("Calculator")
+        setup(self, app.get_resource('backspace.png'))
+        self.set_exp('0')
+
+    def clear_history(self):
+        self.history = []
+        self.history_cursor = None
+
+    def off_history(self):
+        if self.history_cursor is not None:
+            self.history_cursor = None
+            try:
+                self.history.pop()
+            except IndexError:
+                pass
+
+    def show_history(self, do):
+        if self.history_cursor is None:
+            if do == 0:    # previous_history
+                self.history_cursor = len(self.history)-1
+                self.history.append(self.get_exp())
+                try:
+                    if self.history_cursor < 0:
+                        raise IndexError
+                    self.set_exp(self.history[self.history_cursor])
+                except IndexError:
+                    self.history_cursor = self.history_cursor + 1
+        else:
+            try:
+                if do == 0:    # previous_history
+                    self.history_cursor = self.history_cursor - 1
+                else:          # next_history
+                    self.history_cursor = self.history_cursor + 1
+                if self.history_cursor < 0:
+                    raise IndexError
+                self.set_exp(self.history[self.history_cursor])
+            except IndexError:
+                if do == 0:    # previous_history
+                    self.history_cursor = self.history_cursor + 1
+                else:          # next_history
+                    self.history_cursor = self.history_cursor - 1
 
     def copy(self):
         exp = self.get_exp()
-        cursor = self.exp_label.textCursor()
-        if cursor.selectionStart() != cursor.selectionEnd():
-            exp = exp[cursor.selectionStart():cursor.selectionEnd()]
-        pyperclip.copy(exp)
+        if exp not in ERRORS:
+            cursor = self.ui.main_bar.textCursor()
+            if cursor.selectionStart() != cursor.selectionEnd():
+                exp = exp[cursor.selectionStart():cursor.selectionEnd()]
+            for k, v in ADVANCED_KEYS.items():
+                exp = exp.replace(k, v)
+            exp = exp.replace('asin', 'sin⁻¹').replace('acos', 'cos⁻¹').replace('atan', 'tan⁻¹')
+            pyperclip.copy(exp)
+
+    def cut(self):
+        exp = self.get_exp()
+        cursor = self.ui.main_bar.textCursor()
+        if exp not in ERRORS:
+            self.copy()
+            if cursor.selectionStart() != cursor.selectionEnd():
+                self.on_back_click()
+            else:
+                self.set_exp('0')
 
     def paste(self):
-        exp = self.get_exp()
         paste = pyperclip.paste()
-        got_error = False
         if paste != '':
+            exp = self.get_exp()
+            got_error = False
+            paste = paste.replace('sin⁻¹', 'asin').replace('cos⁻¹', 'acos').replace('tan⁻¹', 'atan')
+            for k, v in ADVANCED_KEYS.items():
+                paste = paste.replace(v, k)
+            self.off_history()
             for a_char in paste:
-                if a_char not in '0123456789.+-*/()':
+                if not (a_char in '0123456789.+-*/()^,\u03c0e' or a_char in POWER_LIST or a_char in ROOTS or a_char in EXTRA_SYMBOLS):
                     got_error = True
             if got_error:
-                if exp in Calculator.errors:
+                if exp in ERRORS:
                     self.last_invalid_exp = 0.0
                 else:
                     self.last_invalid_exp = exp
-                self.set_exp(Calculator.errors[5])
+                self.set_exp(ERRORS[5])
             else:
-                cursor = self.exp_label.textCursor()
+                cursor = self.ui.main_bar.textCursor()
                 if cursor.selectionStart() != cursor.selectionEnd():
-                    if exp not in Calculator.errors:
+                    if exp not in ERRORS:
                         res = exp[:cursor.selectionStart()] + paste + exp[cursor.selectionEnd():]
                         self.set_exp(res, cursor.selectionStart()+len(paste))
                 else:
-                    if exp in Calculator.errors or exp == '0':
+                    if exp in ERRORS or exp == '0':
                         if cursor.position() == 0:
                             self.set_exp(exp + paste, len(paste))
                         else:
@@ -60,97 +142,82 @@ class Calculator(QMainWindow):
                     else:
                         self.set_exp(exp[:cursor.position()] + paste + exp[cursor.position():], cursor.position()+len(paste))
 
-    def if_clicked(self, bt):
-        if bt in '1234567890.()+-*/':
-            exp = self.get_exp()
-            cursor = self.exp_label.textCursor()
-            if bt in Calculator.operators:
-                if exp not in Calculator.errors:
-                    if cursor.selectionStart() == cursor.selectionEnd():
-                        self.set_exp(exp[:cursor.position()] + str(bt) + exp[cursor.position():], cursor.position()+len(bt))
-                    else:
-                        self.set_exp(exp[:cursor.selectionStart()] + str(bt) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt))
-            elif exp not in Calculator.errors:
-                if cursor.selectionStart() != cursor.selectionEnd():
-                    self.set_exp(exp[:cursor.selectionStart()] + str(bt) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt))
-                else:
-                    if exp == '0' and bt != '.' and cursor.position() == 1:
-                        self.set_exp(str(bt))
-                    else:
-                        self.set_exp(exp[:cursor.position()] + str(bt) + exp[cursor.position():], cursor.position()+len(bt))
+    def on_power_click(self):
+        if self.make_power_enabled:
+            self.ui.bt_11.setStyleSheet("QToolButton {background: #80bfff}")
+            self.make_power_enabled = False
+        else:
+            self.ui.bt_11.setStyleSheet("QToolButton {background: orange; border:5px outset red;} QToolButton:pressed {background: orange; border:4px inset red;}")
+            self.make_power_enabled = True
+
+    def if_clicked(self, bt, as_power=False):
+        exp = self.get_exp()
+        cursor = self.ui.main_bar.textCursor()
+        self.off_history()
+        if exp not in ERRORS:
+            if self.make_power_enabled or as_power:
+                bt = self.make_power(bt)
+            bt_ = EXTRA_SYMBOLS.get(bt, bt)
+            if exp == '0' and cursor.selectionStart() == cursor.selectionEnd() and cursor.selectionStart() == 1:
+                if not (bt in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'e', 'pi', '^', 'rootx', '!', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'log', 'logx', 'ln', 'deg', 'rad') or bt in ROOTS):
+                    bt_ = '0' + bt_
+                self.set_exp(bt_)
+            elif cursor.selectionStart() == cursor.selectionEnd():
+                self.set_exp(exp[:cursor.position()] + str(bt_) + exp[cursor.position():], cursor.position()+len(bt_))
             else:
-                if bt == '.':
-                    bt = '0.'
-                self.set_exp(str(bt))
+                self.set_exp(exp[:cursor.selectionStart()] + str(bt_) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt_))
+
+    def make_power(self, bt):
+        return POWERS.get(bt, bt)
 
     def on_plus_minus_click(self):
-        cursor = self.exp_label.textCursor()
+        cursor = self.ui.main_bar.textCursor()
         exp = self.get_exp()
-        if exp not in Calculator.errors:
+        self.off_history()
+        if exp not in ERRORS:
             if exp.startswith('-'):
                 self.set_exp(exp[1:], cursor.position()-1)
             else:
                 self.set_exp('-' + exp, cursor.position()+1)
 
-    def on_square_or_cube(self, s):
-        if str(s) in '23456789':
-            exp = self.get_exp()
-            if exp not in Calculator.errors:
-                res = self.get_result(f'({exp})**{s}', double_star_allow=True)
-                if res:
-                    if res in Calculator.errors:
-                        self.last_invalid_exp = exp
-                    self.set_exp(str(res))
+    def on_root_click(self, n):
+        self.if_clicked(ROOTS[n])
 
-    def on_root_click(self, root):
-        if str(root) in '23456789':
-            exp = self.get_exp()
-            if exp not in Calculator.errors:
-                res = self.get_result(exp)
-                if res:
-                    if res in Calculator.errors:
-                        self.last_invalid_exp = exp
-                        self.set_exp(res)
-                    else:
-                        if root in range(0, 10, 2) and res.startswith('-'):
-                            self.last_invalid_exp = exp
-                            self.set_exp(Calculator.errors[3])
-                        else:
-                            res = self.get_result(f'{res}**(1/{root})', double_star_allow=True)
-                            if res:
-                                if res in Calculator.errors:
-                                    self.last_invalid_exp = exp
-                                    self.set_exp(exp)
-                                else:
-                                    if str(res).endswith('.0'):
-                                        res = str(res).replace('.0', '')
-                                    self.set_exp(res)
-
-    def on_back_click(self):
+    def on_back_click(self, delete=False):
         exp = self.get_exp()
-        cursor = self.exp_label.textCursor()
-        if exp not in Calculator.errors and exp != '0':
+        self.off_history()
+        cursor = self.ui.main_bar.textCursor()
+        if exp not in ERRORS and exp != '0':
             if cursor.selectionStart() != cursor.selectionEnd():
                 r = exp[:cursor.selectionStart()] + exp[cursor.selectionEnd():]
-                if r == '':
-                    self.set_exp('0')
-                else:
-                    self.set_exp(r, cursor_pos=cursor.selectionStart())
-            elif cursor.position() != 0:
+                cursor_position = cursor.selectionStart()
+            elif delete:
+                r = exp[:cursor.position()] + exp[cursor.position()+1:]
+                cursor_position = cursor.position()
+            else:
                 r = exp[:cursor.position()-1] + exp[cursor.position():]
-                if r != '':
-                    self.set_exp(r, cursor.position()-1)
-                else:
-                    self.set_exp('0')
+                cursor_position = cursor.position()-1
+            if r != '':
+                self.set_exp(r, cursor_position)
+            else:
+                self.set_exp('0')
         elif cursor.selectionStart() != cursor.selectionEnd():
             self.set_exp(exp)
 
     def on_ac_click(self):
+        self.off_history()
+        if self.make_power_enabled:
+            self.on_power_click()
+        self.history = []
         self.last_invalid_exp = None
         self.memory = 0.0
         self.set_exp('0')
 
     def on_c_click(self):
+        self.off_history()
+        if self.make_power_enabled:
+            self.on_power_click()
+        self.last_invalid_exp = None
         self.set_exp('0')
 
     # 0 = get current memory or 1 = plus memory or 2 = minus memory or 3 = clear memory
@@ -158,82 +225,250 @@ class Calculator(QMainWindow):
         exp = self.get_exp()
         if do == 3:
             self.memory = 0.0
-        elif exp not in Calculator.errors:
+        elif exp not in ERRORS:
             if do == 0:
                 r = str(self.memory)
                 if r.endswith('.0'):
                     r = r.replace('.0', '')
-                cursor = self.exp_label.textCursor()
+                cursor = self.ui.main_bar.textCursor()
                 if cursor.selectionStart() != cursor.selectionEnd():
                     self.set_exp(exp[:cursor.selectionStart()] + r + exp[cursor.selectionEnd():], cursor_pos=cursor.position())
                 else:
-                    if exp == '0':
-                        self.set_exp(r, cursor_pos=cursor.position()+len(r))
+                    if exp == '0' and cursor.selectionStart() == 1:
+                        self.set_exp(r, cursor_pos=len(r))
                     else:
                         self.set_exp(exp[:cursor.position()] + r + exp[cursor.position():], cursor_pos=cursor.position()+len(r))
             elif do in (1, 2):
                 res = self.get_result(exp)
-                if res:
-                    if res in Calculator.errors:
-                        self.last_invalid_exp = exp
-                        self.set_exp(res)
-                    try:
-                        exp_float = float(res)
-                        if do == 1:
-                            self.memory += exp_float
-                        elif do == 2:
-                            self.memory -= exp_float
-                    except:
-                        self.last_invalid_exp = exp
-                        self.set_exp(Calculator.errors[4])
+                if res in ERRORS:
+                    self.last_invalid_exp = exp
+                    self.set_exp(res)
+                try:
+                    exp_float = float(res)
+                    if do == 1:
+                        self.memory += exp_float
+                    else:
+                        self.memory -= exp_float
+                except:
+                    self.last_invalid_exp = exp
+                    self.set_exp(ERRORS[4])
 
     def on_ce_click(self):
         exp = self.get_exp()
-        if exp in Calculator.errors and self.last_invalid_exp:
+        if exp in ERRORS and self.last_invalid_exp:
             self.set_exp(self.last_invalid_exp)
 
     def on_equal_click(self):
+        self.off_history()
         exp = self.get_exp()
+        if exp in ERRORS:
+            return
         res = self.get_result(exp)
-        if res:
-            if res in Calculator.errors:
-                self.last_invalid_exp = exp
-            self.set_exp(res)
+        if self.make_power_enabled:
+            self.on_power_click()
+        if res in ERRORS:
+            self.last_invalid_exp = exp
+        self.set_exp(res)
+        self.history.append(exp)
 
-    def get_result(self, exp, double_star_allow=False):
-        if exp not in Calculator.errors:
-            if exp == '()' or (not double_star_allow and '**' in exp):
-                return Calculator.errors[1]
+    def check_exp_and_get_standard(self, exp):
+        has_power = False
+        for a_char in exp:
+            if a_char in POWER_LIST:
+                has_power = True
+                break
+
+        old_char = None
+        new_exp = ''
+        got_root = False
+        for a_char in exp:
+            if old_char is not None:
+                if got_root:
+                    if a_char in '123456789.0\u03c0e' or a_char in POWER_LIST:
+                        new_exp += a_char
+                    else:
+                        new_exp += ')' + a_char
+                        got_root = False
+                elif old_char in ROOTS and a_char in '123456789.0\u03c0e':
+                    got_root = True
+                    new_exp += '(' + a_char
+                else:
+                    new_exp += a_char
+                old_char = a_char
             else:
-                try:
-                    ans = eval(exp)
-                    if str(ans).endswith('.0'):
-                        ans = str(ans).replace('.0', '')
-                    return str(ans)
-                except ZeroDivisionError:
-                    return Calculator.errors[0]
-                except SyntaxError:
-                    return Calculator.errors[1]
-                except:
-                    return Calculator.errors[2]
-        return None
+                old_char = a_char
+                new_exp += a_char
+        if got_root:
+            new_exp += ')'
+        exp = new_exp
+
+        old_char = None
+        new_exp = ''
+        got_cap = False
+        for a_char in exp:
+            if old_char is not None:
+                if got_cap:
+                    if a_char in '123456789.0\u03c0e' or a_char in POWER_LIST:
+                        new_exp += a_char
+                    else:
+                        new_exp += ')' + a_char
+                        got_cap = False
+                elif old_char == '^' and a_char in '123456789.0\u03c0e':
+                    got_cap = True
+                    new_exp += f'({a_char}'
+                else:
+                    new_exp += a_char
+                old_char = a_char
+            else:
+                old_char = a_char
+                new_exp += a_char
+        if got_cap:
+            new_exp += ')'
+        exp = new_exp
+
+        old_char = None
+        new_exp = ''
+        for a_char in exp:
+            if old_char is not None:
+                if (a_char in ROOTS and (old_char in '1234567890.)e\u03c0' or old_char in POWER_LIST)) or (a_char == '(' and (old_char in '1234567890.)e\u03c0' or old_char in POWER_LIST)) or (old_char == ')' and (a_char in '1234567890.(e\u03c0' or a_char in EXTRA_SYMBOLS)):
+                    new_exp += f'*{a_char}'
+                else:
+                    new_exp += a_char
+                old_char = a_char
+            else:
+                old_char = a_char
+                new_exp += a_char
+        exp = new_exp
+
+        old_char = None
+        new_exp = ''
+        for a_char in exp:
+            if old_char is not None:
+                if ((a_char in '\u03c0e' or a_char in EXTRA_SYMBOLS) and (old_char in '1234567890.)e\u03c0' or old_char in POWER_LIST)) or (old_char in '\u03c0e' and a_char in '1234567890.\u03c0e'):
+                    new_exp += f'*{a_char}'
+                else:
+                    new_exp += a_char
+                old_char = a_char
+            else:
+                old_char = a_char
+                new_exp += a_char
+        exp = new_exp
+
+        if has_power:
+            last_char = None
+            for a_char in exp:
+                if last_char is not None:
+                    if ((last_char in '+-*/(^' or last_char in ROOTS or last_char in EXTRA_SYMBOLS) and a_char in POWER_LIST) or (last_char in POWER_LIST and a_char in '1234567890.(\u03c0e'):
+                        return ERRORS[1]
+                last_char = a_char
+        res = ''
+        if has_power:
+            last_was_power = False
+            for a_char in exp:
+                if last_was_power and a_char not in POWER_LIST:
+                    res += ')'
+                if a_char in POWER_LIST:
+                    if last_was_power:
+                        res += POWER_VALUES[a_char]
+                    else:
+                        res += '**(' + POWER_VALUES[a_char]
+                    last_was_power = True
+                else:
+                    res += a_char
+                    last_was_power = False
+            if last_was_power:
+                res += ')'
+            return res
+        return exp
+
+    def get_result(self, exp):
+        if '()' in exp or '**' in exp:
+            return ERRORS[1]
+        # fixing exp
+        exp = self.check_exp_and_get_standard(exp)
+        if exp in ERRORS:
+            return exp
+        for k, v in ADVANCED_KEYS.items():
+            if v in ['log(', 'logx(', 'In(', 'deg(', 'rad(', 'fact(', 'rootx(']:
+                exp = exp.replace(k, v)
+            else:
+                exp = exp.replace(k, f'self.{v}')
+        exp = exp.replace(f'{ROOTS[0]}(', 'root(').replace(f'{ROOTS[1]}(', 'cube_root(').replace('\u03c0', 'pi').replace('^', '**')
+        
+        try:
+            ans = str(eval(exp))
+            if ans.endswith('.0'):
+                ans = ans.replace('.0', '')
+            elif ans.endswith('j)'):
+                return ERRORS[3]
+            if 'e' in ans:
+                r = ''
+                e_got = False
+                for a_char in ans:
+                    if e_got:
+                        if a_char != '+':
+                            r += self.make_power(a_char)
+                    elif a_char == 'e':
+                        e_got = True
+                        r += '\u00d710'
+                    else:
+                        r += a_char
+                ans = r
+            return str(ans)
+        except ZeroDivisionError:
+            return ERRORS[0]
+        except SyntaxError:
+            return ERRORS[1]
+        except Exception as e:
+            # print(error)
+            if str(e) == 'math domain error':
+                return ERRORS[3]
+            return ERRORS[2]
 
     def set_exp(self, text, cursor_pos=None):
         text = str(text).replace('*', '\u00d7').replace('/', '\u00f7')
-        self.exp_label.setText(text)
+        self.ui.main_bar.setText(text)
         if cursor_pos is None:
-            self.exp_label.moveCursor(QTextCursor.End)
+            self.ui.main_bar.moveCursor(QTextCursor.End)
         else:
-            self.exp_label.moveCursor(QTextCursor.Start)
-            for a in range(0, cursor_pos):
-                self.exp_label.moveCursor(QTextCursor.Right)
+            self.ui.main_bar.moveCursor(QTextCursor.Start)
+            for i in range(0, cursor_pos):
+                self.ui.main_bar.moveCursor(QTextCursor.Right)
 
     def get_exp(self):
-        return str(self.exp_label.toPlainText()).replace('\u00d7', '*').replace('\u00f7', '/').replace('\n', '')
+        return str(self.ui.main_bar.toPlainText()).replace('\u00d7', '*').replace('\u00f7', '/').replace('\n', '')
 
+    def sin(self, n):
+        if self.ui.radio_bt_1.isChecked():
+            return math.sin(math.radians(n))
+        return math.sin(n)
+
+    def cos(self, n):
+        if self.ui.radio_bt_1.isChecked():
+            return math.cos(math.radians(n))
+        return math.cos(n)
+
+    def tan(self, n):
+        if self.ui.radio_bt_1.isChecked():
+            return math.atan(math.radians(n))
+        return math.tan(n)
+
+    def asin(self, n):
+        if self.ui.radio_bt_1.isChecked():
+            return math.degrees(math.asin(n))
+        return math.asin(n)
+
+    def acos(self, n):
+        if self.ui.radio_bt_1.isChecked():
+            return math.degrees(math.acos(n))
+        return math.acos(n)
+
+    def atan(self, n):
+        if self.ui.radio_bt_1.isChecked():
+            return math.degrees(math.atan(n))
+        return math.atan(n)
 
 if __name__ == '__main__':
     window = Calculator()
-    window.setWindowTitle("Calculator")
     window.show()
-    sys.exit(appctxt.app.exec_())
+    sys.exit(app.app.exec_())
