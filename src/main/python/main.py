@@ -158,12 +158,13 @@ class Calculator(QMainWindow):
             if self.make_power_enabled or as_power:
                 bt = self.make_power(bt)
             bt_ = EXTRA_SYMBOLS.get(bt, bt)
-            if exp == '0' and cursor.selectionStart() == cursor.selectionEnd() and cursor.selectionStart() == 1:
-                if not (bt in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'e', 'pi', '^', 'rootx', '!', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'log', 'logx', 'ln', 'deg', 'rad') or bt in ROOTS):
-                    bt_ = '0' + bt_
-                self.set_exp(bt_)
-            elif cursor.selectionStart() == cursor.selectionEnd():
-                self.set_exp(exp[:cursor.position()] + str(bt_) + exp[cursor.position():], cursor.position()+len(bt_))
+            if cursor.selectionStart() == cursor.selectionEnd():
+                if exp == '0' and cursor.selectionStart() == 1:
+                    if not (bt in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'e', 'pi', '^', 'rootx', '!', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'log', 'logx', 'ln', 'deg', 'rad', '(') or bt in ROOTS):
+                        bt_ = '0' + bt_
+                    self.set_exp(bt_)
+                else:
+                    self.set_exp(exp[:cursor.position()] + str(bt_) + exp[cursor.position():], cursor.position()+len(bt_))
             else:
                 self.set_exp(exp[:cursor.selectionStart()] + str(bt_) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt_))
 
