@@ -10,7 +10,7 @@ app = ApplicationContext()
 
 ERRORS = ('ZeroDivisionError', 'SyntaxError', 'Error', 'MathError', 'NotANumberError', 'PasteError')
 ROOTS = ['\u221a', '\u221b']
-ADVANCED_KEYS = {'ŭ': 'asin(', 'Ů': 'acos(', 'ů': 'atan(', 'Ű': 'log(','Ū': 'sin(', 'ū': 'cos(', 'Ŭ': 'tan(', 'ű': 'In(', 'Ų': 'logx(', 'ų': 'deg(', 'Ŵ': 'rad(', 'ŵ': 'fact(', 'Ŷ': 'rootx('}
+ADVANCED_KEYS = {'ŭ': 'asin(', 'Ů': 'acos(', 'ů': 'atan(', 'Ű': 'log(','Ū': 'sin(', 'ū': 'cos(', 'Ŭ': 'tan(', 'ű': 'ln(', 'Ų': 'logx(', 'ų': 'deg(', 'Ŵ': 'rad(', 'ŵ': 'fact(', 'Ŷ': 'rootx('}
 EXTRA_SYMBOLS = {'pi': '\u03c0', 'asin': '\u016d', 'acos': '\u016e', 'atan': '\u016f', 'sin': '\u016a', 'cos': '\u016b', 'tan': '\u016c', 'log': '\u0170', 'ln': '\u0171', 'logx': '\u0172', 'deg': '\u0173','rad': '\u0174', '!': '\u0175', 'rootx': '\u0176'}
 POWERS = {'0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '.': '\u02d9', '*': '\u02df', '(': '\u207d', ')': '\u207e', '+': '\u207a', '-': '\u207b', '/': '\ua719'}
 POWER_VALUES = {'⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '\u02d9': '.', '\u02df': '*', '\u207d': '(', '\u207e': ')', '\u207a': '+', '\u207b': '-', '\ua719': '/'}
@@ -403,7 +403,7 @@ class Calculator(QMainWindow):
         if exp in ERRORS:
             return exp
         for k, v in ADVANCED_KEYS.items():
-            if v in ['log(', 'logx(', 'In(', 'deg(', 'rad(', 'fact(', 'rootx(']:
+            if v in ['log(', 'logx(', 'ln(', 'deg(', 'rad(', 'fact(', 'rootx(']:
                 exp = exp.replace(k, v)
             else:
                 exp = exp.replace(k, f'self.{v}')
