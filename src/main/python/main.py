@@ -434,7 +434,7 @@ class Calculator(QMainWindow):
         except SyntaxError:
             return ERRORS[1]
         except Exception as e:
-            print(e)
+            # print(e)
             if str(e) == 'math domain error':
                 return ERRORS[3]
             return ERRORS[2]
