@@ -31,6 +31,17 @@ def rootx(base, exp):
 def cube_root(exp):
     return root(exp, 3)
 
+class ExpCursor:
+    def __init__(self, cursor):
+        self.pos = cursor.position()
+        self.start = cursor.selectionStart()
+        self.end = cursor.selectionEnd()
+
+    def has_selection(self):
+        if self.start == self.end:
+            return False
+        return True
+
 class Calculator(QMainWindow):
     QFontDatabase.addApplicationFont(app.get_resource('font'))
     ui = Ui_MainWindow()
@@ -48,7 +59,7 @@ class Calculator(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle("Calculator")
         setup(self, app.get_resource('backspace.png'))
-        self.set_exp('0')
+        self.reset_exp()
 
     def clear_history(self):
         self.history = []
@@ -91,9 +102,9 @@ class Calculator(QMainWindow):
     def copy(self):
         exp = self.get_exp()
         if exp not in ERRORS:
-            cursor = self.ui.main_bar.textCursor()
-            if cursor.selectionStart() != cursor.selectionEnd():
-                exp = exp[cursor.selectionStart():cursor.selectionEnd()]
+            c = ExpCursor(self.get_cursor())
+            if c.has_selection():
+                exp = exp[c.start:c.end]
             for k, v in ADVANCED_KEYS.items():
                 exp = exp.replace(k, v)
             exp = exp.replace('asin', 'sin⁻¹').replace('acos', 'cos⁻¹').replace('atan', 'tan⁻¹')
@@ -101,13 +112,13 @@ class Calculator(QMainWindow):
 
     def cut(self):
         exp = self.get_exp()
-        cursor = self.ui.main_bar.textCursor()
+        c = ExpCursor(self.get_cursor())
         if exp not in ERRORS:
             self.copy()
-            if cursor.selectionStart() != cursor.selectionEnd():
+            if c.has_selection():
                 self.on_back_click()
             else:
-                self.set_exp('0')
+                self.reset_exp()
 
     def paste(self):
         paste = pyperclip.paste()
@@ -128,19 +139,19 @@ class Calculator(QMainWindow):
                     self.last_invalid_exp = exp
                 self.set_exp(ERRORS[5])
             else:
-                cursor = self.ui.main_bar.textCursor()
-                if cursor.selectionStart() != cursor.selectionEnd():
+                c = ExpCursor(self.get_cursor())
+                if c.has_selection():
                     if exp not in ERRORS:
-                        res = exp[:cursor.selectionStart()] + paste + exp[cursor.selectionEnd():]
-                        self.set_exp(res, cursor.selectionStart()+len(paste))
+                        res = exp[:c.start] + paste + exp[c.end:]
+                        self.set_exp(res, c.start+len(paste))
                 else:
                     if exp in ERRORS or exp == '0':
-                        if cursor.position() == 0:
+                        if c.pos== 0:
                             self.set_exp(exp + paste, len(paste))
                         else:
                             self.set_exp(paste)
                     else:
-                        self.set_exp(exp[:cursor.position()] + paste + exp[cursor.position():], cursor.position()+len(paste))
+                        self.set_exp(exp[:c.pos] + paste + exp[c.pos:], c.pos+len(paste))
 
     def on_power_click(self):
         if self.make_power_enabled:
@@ -152,57 +163,59 @@ class Calculator(QMainWindow):
 
     def if_clicked(self, bt, as_power=False):
         exp = self.get_exp()
-        cursor = self.ui.main_bar.textCursor()
+        c = ExpCursor(self.get_cursor())
         self.off_history()
         if exp not in ERRORS:
             if self.make_power_enabled or as_power:
                 bt = self.make_power(bt)
             bt_ = EXTRA_SYMBOLS.get(bt, bt)
-            if cursor.selectionStart() == cursor.selectionEnd():
-                if exp == '0' and cursor.selectionStart() == 1:
+            if c.has_selection():
+                self.set_exp(exp[:c.start] + str(bt_) + exp[c.end:], c.start+len(bt_))
+            else:
+                if exp == '0' and c.pos == 1:
                     if not (bt in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'e', 'pi', '^', 'rootx', '!', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'log', 'logx', 'ln', 'deg', 'rad', '(') or bt in ROOTS):
                         bt_ = '0' + bt_
                     self.set_exp(bt_)
                 else:
-                    self.set_exp(exp[:cursor.position()] + str(bt_) + exp[cursor.position():], cursor.position()+len(bt_))
-            else:
-                self.set_exp(exp[:cursor.selectionStart()] + str(bt_) + exp[cursor.selectionEnd():], cursor.selectionStart()+len(bt_))
+                    self.set_exp(exp[:c.pos] + str(bt_) + exp[c.pos:], c.pos+len(bt_))
 
     def make_power(self, bt):
         return POWERS.get(bt, bt)
 
     def on_plus_minus_click(self):
-        cursor = self.ui.main_bar.textCursor()
+        cursor_pos = ExpCursor(self.get_cursor()).pos
         exp = self.get_exp()
         self.off_history()
         if exp not in ERRORS:
             if exp.startswith('-'):
-                self.set_exp(exp[1:], cursor.position()-1)
+                self.set_exp(exp[1:], cursor_pos-1)
+            if exp.startswith('+'):
+                self.set_exp('-' + exp[1:], cursor_pos)
             else:
-                self.set_exp('-' + exp, cursor.position()+1)
+                self.set_exp('-' + exp, cursor_pos+1)
 
     def on_root_click(self, n):
         self.if_clicked(ROOTS[n])
 
     def on_back_click(self, delete=False):
         exp = self.get_exp()
+        c = ExpCursor(self.get_cursor())
         self.off_history()
-        cursor = self.ui.main_bar.textCursor()
+
         if exp not in ERRORS and exp != '0':
-            if cursor.selectionStart() != cursor.selectionEnd():
-                r = exp[:cursor.selectionStart()] + exp[cursor.selectionEnd():]
-                cursor_position = cursor.selectionStart()
+            if c.has_selection():
+                r = exp[:c.start] + exp[c.end:]
+                c.pos = c.start
             elif delete:
-                r = exp[:cursor.position()] + exp[cursor.position()+1:]
-                cursor_position = cursor.position()
+                r = exp[:c.pos] + exp[c.pos+1:]
             else:
-                r = exp[:cursor.position()-1] + exp[cursor.position():]
-                cursor_position = cursor.position()-1
+                r = exp[:c.pos-1] + exp[c.pos:]
+                c.pos = c.pos-1
             if r != '':
-                self.set_exp(r, cursor_position)
+                self.set_exp(r, c.pos)
             else:
-                self.set_exp('0')
-        elif cursor.selectionStart() != cursor.selectionEnd():
+                self.reset_exp()
+        elif c.has_selection():
             self.set_exp(exp)
 
     def on_ac_click(self):
@@ -212,14 +225,14 @@ class Calculator(QMainWindow):
         self.history = []
         self.last_invalid_exp = None
         self.memory = 0.0
-        self.set_exp('0')
+        self.reset_exp()
 
     def on_c_click(self):
         self.off_history()
         if self.make_power_enabled:
             self.on_power_click()
         self.last_invalid_exp = None
-        self.set_exp('0')
+        self.reset_exp()
 
     # 0 = get current memory or 1 = plus memory or 2 = minus memory or 3 = clear memory
     def on_all_m_click(self, do=0):
@@ -231,14 +244,14 @@ class Calculator(QMainWindow):
                 r = str(self.memory)
                 if r.endswith('.0'):
                     r = r.replace('.0', '')
-                cursor = self.ui.main_bar.textCursor()
-                if cursor.selectionStart() != cursor.selectionEnd():
-                    self.set_exp(exp[:cursor.selectionStart()] + r + exp[cursor.selectionEnd():], cursor_pos=cursor.position())
+                c = ExpCursor(self.get_cursor())
+                if c.has_selection():
+                    self.set_exp(exp[:c.start] + r + exp[c.end:], c.pos)
                 else:
-                    if exp == '0' and cursor.selectionStart() == 1:
-                        self.set_exp(r, cursor_pos=len(r))
+                    if exp == '0' and c.start == 1:
+                        self.set_exp(r, len(r))
                     else:
-                        self.set_exp(exp[:cursor.position()] + r + exp[cursor.position():], cursor_pos=cursor.position()+len(r))
+                        self.set_exp(exp[:c.pos] + r + exp[c.pos:], c.pos+len(r))
             elif do in (1, 2):
                 res = self.get_result(exp)
                 if res in ERRORS:
@@ -421,14 +434,13 @@ class Calculator(QMainWindow):
         except SyntaxError:
             return ERRORS[1]
         except Exception as e:
-            # print(error)
+            print(e)
             if str(e) == 'math domain error':
                 return ERRORS[3]
             return ERRORS[2]
 
     def set_exp(self, text, cursor_pos=None):
-        text = str(text).replace('*', '\u00d7').replace('/', '\u00f7')
-        self.ui.main_bar.setText(text)
+        self.ui.main_bar.setText(str(text).replace('*', '\u00d7').replace('/', '\u00f7'))
         if cursor_pos is None:
             self.ui.main_bar.moveCursor(QTextCursor.End)
         else:
@@ -438,6 +450,12 @@ class Calculator(QMainWindow):
 
     def get_exp(self):
         return str(self.ui.main_bar.toPlainText()).replace('\u00d7', '*').replace('\u00f7', '/').replace('\n', '')
+
+    def get_cursor(self):
+        return self.ui.main_bar.textCursor()
+
+    def reset_exp(self):
+        self.set_exp('0')
 
     def sin(self, n):
         if self.ui.radio_bt_1.isChecked():
