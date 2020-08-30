@@ -458,34 +458,19 @@ class Calculator(QMainWindow):
         self.set_exp('0')
 
     def sin(self, n):
-        if self.ui.radio_bt_1.isChecked():
-            return math.sin(math.radians(n))
-        return math.sin(n)
-
+        return math.sin(math.radians(n)) if self.degree_enabled() else math.sin(n)
     def cos(self, n):
-        if self.ui.radio_bt_1.isChecked():
-            return math.cos(math.radians(n))
-        return math.cos(n)
-
+        return math.cos(math.radians(n)) if self.degree_enabled() else math.cos(n)
     def tan(self, n):
-        if self.ui.radio_bt_1.isChecked():
-            return math.atan(math.radians(n))
-        return math.tan(n)
-
+        return math.tan(math.radians(n)) if self.degree_enabled() else math.tan(n)
     def asin(self, n):
-        if self.ui.radio_bt_1.isChecked():
-            return math.degrees(math.asin(n))
-        return math.asin(n)
-
+        return math.degrees(math.asin(n)) if self.degree_enabled() else math.asin(n)
     def acos(self, n):
-        if self.ui.radio_bt_1.isChecked():
-            return math.degrees(math.acos(n))
-        return math.acos(n)
-
+        return math.degrees(math.acos(n)) if self.degree_enabled() else math.acos(n)
     def atan(self, n):
-        if self.ui.radio_bt_1.isChecked():
-            return math.degrees(math.atan(n))
-        return math.atan(n)
+        return math.degrees(math.atan(n)) if self.degree_enabled() else math.atan(n)
+    def degree_enabled(self):
+        return self.ui.radio_bt_1.isChecked()
 
 if __name__ == '__main__':
     window = Calculator()
