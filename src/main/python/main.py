@@ -173,7 +173,7 @@ class Calculator(QMainWindow):
                 self.set_exp(exp[:c.start] + str(bt_) + exp[c.end:], c.start+len(bt_))
             else:
                 if exp == '0' and c.pos == 1:
-                    if not (bt in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'e', 'pi', '^', 'rootx', '!', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'log', 'logx', 'ln', 'deg', 'rad', '(') or bt in ROOTS):
+                    if not (bt in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'e', 'pi', '^', 'rootx', '!', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'log', 'logx', 'ln', 'deg', 'rad', '(', '-') or bt in ROOTS):
                         bt_ = '0' + bt_
                     self.set_exp(bt_)
                 else:
@@ -189,7 +189,7 @@ class Calculator(QMainWindow):
         if exp not in ERRORS:
             if exp.startswith('-'):
                 self.set_exp(exp[1:], cursor_pos-1)
-            if exp.startswith('+'):
+            elif exp.startswith('+'):
                 self.set_exp('-' + exp[1:], cursor_pos)
             else:
                 self.set_exp('-' + exp, cursor_pos+1)
