@@ -3,6 +3,7 @@ from dialogs import Ui_AboutPage, Ui_ShortcutPage
 import sys
 
 def setup(self, backspace_ic):
+    self.setWindowTitle("Calculator")
     self.about_page = None
     self.shortcut_page = None
     self.setFixedHeight(370)
@@ -22,7 +23,7 @@ def set_menu_buttons(self):
     self.ui.actionPaste.triggered.connect(self.paste)
     self.ui.actionPrevious_History.triggered.connect(lambda: self.show_history(0))
     self.ui.actionNext_History.triggered.connect(lambda: self.show_history(1))
-    self.ui.actionClear_History.triggered.connect(self.clear_history)
+    self.ui.actionClear_History.triggered.connect(self.history.clear)
     self.ui.actionAbout_the_Author.triggered.connect(lambda: show_dialog(self, n=1))
 
 def set_on_click_event(self):
@@ -34,8 +35,8 @@ def set_on_click_event(self):
     self.ui.bt_6.clicked.connect(lambda: self.on_all_m_click(0))
     self.ui.bt_7.clicked.connect(lambda: self.on_c_click())
 
-    self.ui.bt_8.clicked.connect(lambda: self.on_root_click(0))
-    self.ui.bt_9.clicked.connect(lambda: self.on_root_click(1))
+    self.ui.bt_8.clicked.connect(lambda: self.if_clicked('root2'))
+    self.ui.bt_9.clicked.connect(lambda: self.if_clicked('root3'))
     self.ui.bt_10.clicked.connect(lambda: self.if_clicked("2", as_power=True))
     self.ui.bt_11.clicked.connect(lambda: self.on_power_click())
     self.ui.bt_12.clicked.connect(lambda: self.on_back_click())
@@ -132,8 +133,8 @@ def set_key_sequence(self):
     QtWidgets.QShortcut(QtGui.QKeySequence('ctrl+/'), self).activated.connect(lambda: self.if_clicked('/', as_power=True))
     QtWidgets.QShortcut(QtGui.QKeySequence('ctrl+alt+9'), self).activated.connect(lambda: self.if_clicked('(', as_power=True))
     QtWidgets.QShortcut(QtGui.QKeySequence('ctrl+alt+0'), self).activated.connect(lambda: self.if_clicked(')', as_power=True))
-    QtWidgets.QShortcut(QtGui.QKeySequence('alt+2'), self).activated.connect(lambda: self.on_root_click(0))
-    QtWidgets.QShortcut(QtGui.QKeySequence('alt+3'), self).activated.connect(lambda: self.on_root_click(1))
+    QtWidgets.QShortcut(QtGui.QKeySequence('alt+2'), self).activated.connect(lambda: self.if_clicked('root2'))
+    QtWidgets.QShortcut(QtGui.QKeySequence('alt+3'), self).activated.connect(lambda: self.if_clicked('root3'))
 
 def update_ui(self):
     i1, i2 = self.ui.actionAdvance_Screen.isChecked(), self.ui.actionFullscreen.isChecked()
