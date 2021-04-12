@@ -94,6 +94,25 @@ def check_exp_and_get_standard(exp):
         res += ')'
     return res
 
+def correct_ans(ans):
+    ans = str(round(ans, 11)) # round ans to 11 decimal points to avoid large decimal
+    if ans.endswith('.0'):
+        ans = ans[:-2]
+    if 'e' in ans:
+        r = ''
+        e_got = False
+        for a_char in ans:
+            if e_got:
+                if a_char != '+':
+                    r += make_power(a_char)
+            elif a_char == 'e':
+                e_got = True
+                r += '\u00d710'
+            else:
+                r += a_char
+        ans = r
+    return ans
+
 def get_result(exp, degree_enabled):
     if '()' in exp or '**' in exp:
         return ERRORS[1]
@@ -110,23 +129,7 @@ def get_result(exp, degree_enabled):
         ans = eval(exp)
         if str(ans).endswith('j)'):
             return ERRORS[3]
-        ans = str(round(ans, 11)) # round ans to 11 decimal points to avoid large decimal
-        if ans.endswith('.0'):
-            ans = ans.replace('.0', '')
-        if 'e' in ans:
-            r = ''
-            e_got = False
-            for a_char in ans:
-                if e_got:
-                    if a_char != '+':
-                        r += make_power(a_char)
-                elif a_char == 'e':
-                    e_got = True
-                    r += '\u00d710'
-                else:
-                    r += a_char
-            ans = r
-        return str(ans)
+        return ', '.join([correct_ans(i) for i in ans]) if isinstance(ans, tuple) else correct_ans(ans)
     except ZeroDivisionError:
         return ERRORS[3]
     except SyntaxError:
