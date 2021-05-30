@@ -132,7 +132,7 @@ class Calculator(QMainWindow):
             self.ui.bt_11.setStyleSheet("QToolButton {background: #80bfff}")
             self.make_power_enabled = False
         else:
-            self.ui.bt_11.setStyleSheet("QToolButton {background: orange; border:5px outset red;} QToolButton:pressed {background: orange; border:4px inset red;}")
+            self.ui.bt_11.setStyleSheet("QToolButton {background: orange; border:3px outset red;} QToolButton:pressed {background: orange; border:3px inset red;}")
             self.make_power_enabled = True
 
     def if_clicked(self, bt, as_power=False):
