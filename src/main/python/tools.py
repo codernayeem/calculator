@@ -16,6 +16,9 @@ ADVANCED_KEYS = {'^': '**', '×': '*', '÷': '/', 'π': 'pi', '√': 'root(2,', 
 ADVANCED_SYMBOLS = ['ŭ', 'Ů', 'ů', 'Ū', 'ū', 'Ŭ', 'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', '√', '∛']
 NUMBERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'π', 'e']
 
+# Can be used after 0 (Monitor Symbols)
+AFTER_0 = ['^', ')', '*10', ',', '+', '-', '×', '÷', '.'] + POWER_LIST
+
 def is_symbol(s):
     return True if s in NUMBERS + ADVANCED_SYMBOLS + ['+', '-', '×', '÷', '(', ')', '^', ','] + POWER_LIST else False
 

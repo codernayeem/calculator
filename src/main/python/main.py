@@ -5,7 +5,7 @@ import pyperclip, sys
 
 from main_ui import Ui_MainWindow
 from setup import setup
-from tools import error, make_power, get_result, is_symbol, MONITOR_SYMBOLS, ERRORS, ADVANCED_KEYS
+from tools import error, make_power, get_result, is_symbol, MONITOR_SYMBOLS, ERRORS, ADVANCED_KEYS, AFTER_0
 
 app = ApplicationContext()
 
@@ -142,7 +142,7 @@ class Calculator(QMainWindow):
             if self.make_power_enabled or as_power:
                 bt = make_power(bt)
             bt = MONITOR_SYMBOLS.get(bt, bt)
-            self.exp.put_data_on_exp('0' + bt if self.exp.exp == '0' and self.exp.pos == 1 and bt in ['^', ')', '*10', ','] else bt)
+            self.exp.put_data_on_exp('0' + bt if self.exp.exp == '0' and self.exp.pos == 1 and bt in AFTER_0 else bt)
             self.update_monitor()
 
     def on_plus_minus_click(self):
