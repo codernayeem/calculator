@@ -73,14 +73,6 @@ def check_exp_and_get_standard(exp):
     exp = fix_bracket(exp, '^', NUMBERS + POWER_LIST, True) # fixes bracket after cap
     exp = fix_multiplication(exp, NUMBERS + POWER_LIST +  [')'], ['(', 'e', 'π'] + ADVANCED_SYMBOLS) # fixes multiply after/before some symbols
 
-    # check for error with powers
-    last_char = None
-    for a_char in exp:
-        if last_char is not None:
-            if (last_char not in NUMBERS + [')'] and a_char in POWER_LIST) or (last_char in POWER_LIST and a_char in NUMBERS):
-                return ERRORS[1]
-        last_char = a_char
-    
     # convert powers to plain equation with brackets
     res = ''
     last_was_power = False
