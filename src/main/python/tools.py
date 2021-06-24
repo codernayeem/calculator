@@ -159,6 +159,6 @@ def tan(degree_enabled, n):
 def asin(degree_enabled, n):
     return check_degree(degree_enabled, math.asin(n))
 def acos(degree_enabled, n):
-    return check_degree(degree_enabled, math.asin(n))
+    return check_degree(degree_enabled, math.acos(n))
 def atan(degree_enabled, n):
-    return check_degree(degree_enabled, math.asin(n))
+    return check_degree(degree_enabled, math.atan(n))
